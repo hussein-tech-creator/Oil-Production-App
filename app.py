@@ -4,110 +4,108 @@ import numpy as np
 import plotly.graph_objects as go
 from io import BytesIO
 
-# 1. إعدادات الصفحة والتصميم الفاخر
-st.set_page_config(page_title="Petro-Elite Optimizer", layout="wide", page_icon="🛢️")
+# 1. إعدادات الصفحة (تصميم نظيف ومريح للعين)
+st.set_page_config(page_title="Petro-Elite Dashboard", layout="wide", page_icon="🛢️")
 
 st.markdown("""
     <style>
-    /* تغيير لون الخلفية العام */
-    .stApp { background-color: #f4f7f9; }
+    /* خلفية بيضاء ساطعة */
+    .stApp { background-color: #ffffff; }
     
-    /* تنسيق البطاقات العلوية */
-    div[data-testid="stMetric"] {
-        background-color: #ffffff;
-        border: 1px solid #e0e6ed;
-        padding: 15px 20px;
-        border-radius: 12px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.03);
-    }
-    
-    /* تنسيق القائمة الجانبية */
+    /* تنسيق القائمة الجانبية بلون أزرق بترولي فاتح */
     section[data-testid="stSidebar"] {
-        background-color: #1e293b;
-        color: white;
+        background-color: #f0f4f8;
+        border-right: 2px solid #d1d9e6;
     }
     
-    /* تنسيق العنوان */
-    h1 { color: #0f172a; font-family: 'Segoe UI', sans-serif; font-weight: 700; }
+    /* وضوح النصوص في القائمة الجانبية */
+    section[data-testid="stSidebar"] .css-17l2qt2 { color: #003366; }
     
-    /* لوحة التحكم الجانبية */
-    .sidebar-logo {
-        display: flex;
-        justify-content: center;
-        padding: 20px 0;
+    /* بطاقات النتائج (Metrics) بشكل بارز ونظيف */
+    div[data-testid="stMetric"] {
+        background-color: #f8fbff;
+        border: 2px solid #e1e8f0;
+        padding: 20px;
+        border-radius: 10px;
+    }
+    
+    /* تنسيق العناوين */
+    h1, h2, h3 { color: #003366; font-family: 'Arial', sans-serif; }
+    
+    .logo-container {
+        text-align: center;
+        padding: 10px;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# 2. القائمة الجانبية مع الشعار الجديد
+# 2. القائمة الجانبية (شعار نفطي حقيقي + وضوح عالٍ)
 with st.sidebar:
-    # تم تغيير الرابط لشعار يعبر عن الطاقة والتقنية (قطرة نفط تقنية)
-    logo_url = "https://cdn-icons-png.flaticon.com/512/4114/4114944.png"
-    st.markdown(f'<div class="sidebar-logo"><img src="{logo_url}" width="110"></div>', unsafe_allow_html=True)
+    # شعار صناعي (أيقونة مصفاة/بئر نفط)
+    logo_url = "https://cdn-icons-png.flaticon.com/512/2518/2518048.png"
+    st.markdown(f'<div class="logo-container"><img src="{logo_url}" width="130"></div>', unsafe_allow_html=True)
     
-    st.markdown("<h2 style='text-align: center; color: white;'>Asset Control</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #94a3b8;'>Eng. Hussein Ali Al-Amery</p>", unsafe_allow_html=True)
-    st.markdown("---")
+    st.markdown("<h3 style='text-align: center;'>Asset Management</h3>", unsafe_allow_html=True)
+    st.write("---")
     
-    tab_eng, tab_econ = st.tabs(["⚙️ Physics", "💰 Market"])
+    # تنظيم المدخلات بشكل مريح
+    st.subheader("🛠️ Reservoir Parameters")
+    p_res = st.number_input("Reservoir Pressure (psi)", value=3500)
+    pi = st.slider("Productivity Index (J)", 0.5, 5.0, 1.5)
     
-    with tab_eng:
-        p_res = st.number_input("Res. Pressure (psi)", value=3500, help="Reservoir static pressure")
-        pi = st.slider("Productivity Index (J)", 0.5, 5.0, 1.5)
-        t_size = st.selectbox("Tubing Size (inch)", [2.375, 2.875, 3.5])
-    
-    with tab_econ:
-        oil_price = st.slider("Oil Price ($/bbl)", 40, 140, 85)
-        opex = st.number_input("Lifting Cost ($/bbl)", value=15)
+    st.subheader("💰 Economic Factors")
+    oil_price = st.slider("Oil Price ($/bbl)", 40, 140, 85)
+    t_size = st.selectbox("Tubing Size (in)", [2.375, 2.875, 3.5])
 
-# 3. الحسابات الهندسية (Nodal Analysis)
-q_range = np.linspace(0, p_res * pi, 50)
+# 3. محرك الحسابات (Nodal Analysis)
+q_range = np.linspace(0, p_res * pi, 100)
 pwf_ipr = p_res - (q_range / pi)
-pwf_vlp = 250 + (0.0007 * q_range**2 / (t_size/2.875)**4) + 1000
+# معادلة VLP محسنة هندسياً
+pwf_vlp = 200 + (0.0008 * q_range**1.8 / (t_size/2.875)**4) + 1100
 
 idx = np.argwhere(np.diff(np.sign(pwf_ipr - pwf_vlp))).flatten()
 opt_q = q_range[idx[0]] if len(idx) > 0 else 0
 opt_p = pwf_ipr[idx[0]] if len(idx) > 0 else 0
 
-# 4. لوحة القيادة (Dashboard)
-st.title("💎 Petro-Elite Optimizer")
-st.write("Advanced Nodal Analysis & Production Maximization")
+# 4. واجهة النتائج الرئيسية
+st.title("💎 Petro-Elite™ Production Optimizer")
+st.write("Engineering Intelligence for Field Development")
 
-m1, m2, m3, m4 = st.columns(4)
-m1.metric("Optimal Flow Rate", f"{int(opt_q)} bbl/d")
-m2.metric("Flowing Pressure", f"{int(opt_p)} psi")
-m3.metric("Daily Net Profit", f"${int(opt_q * (oil_price - opex)):,}")
-m4.metric("Asset Efficiency", f"{int((opt_q/(p_res*pi))*100)}%")
-
-# 5. التحليل الفني والبصري
-st.markdown("### 📊 Engineering Optimization Plot")
-col_chart, col_side = st.columns([3, 1])
-
-with col_chart:
-    fig = go.Figure()
-    # IPR Curve
-    fig.add_trace(go.Scatter(x=q_range, y=pwf_ipr, name="Reservoir IPR", 
-                             line=dict(color='#3b82f6', width=4), fill='tozeroy'))
-    # VLP Curve
-    fig.add_trace(go.Scatter(x=q_range, y=pwf_vlp, name="Vertical Lift (VLP)", 
-                             line=dict(color='#ef4444', width=4)))
-    
-    if opt_q > 0:
-        fig.add_trace(go.Scatter(x=[opt_q], y=[opt_p], mode='markers', name="Optimal Point",
-                                 marker=dict(size=18, color='#f59e0b', symbol='diamond', 
-                                 line=dict(width=2, color='white'))))
-
-    fig.update_layout(template="plotly_white", margin=dict(l=0, r=0, t=30, b=0), height=450,
-                      legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
-    st.plotly_chart(fig, use_container_width=True)
-
-with col_side:
-    st.info("**Analysis Summary**")
-    st.write(f"Well is performing at peak efficiency for a **{t_size}\"** tubing string.")
-    if opt_p < 1000:
-        st.warning("⚠️ Low FBHP: Risk of liquid loading detected.")
-    else:
-        st.success("✅ Stable flow conditions confirmed.")
+col1, col2, col3 = st.columns(3)
+with col1:
+    st.metric("Optimal Rate", f"{int(opt_q)} bbl/d", delta="Stabilized")
+with col2:
+    st.metric("Operating Pressure", f"{int(opt_p)} psi")
+with col3:
+    st.metric("Daily Revenue", f"${int(opt_q * oil_price):,}")
 
 st.markdown("---")
-st.caption("Developed by Eng. Hussein Ali | Final Graduate Project Extension 2026")
+
+# 5. الرسم البياني (ألوان واضحة جداً)
+st.subheader("📊 Production Optimization Plot (Nodal Analysis)")
+fig = go.Figure()
+
+# منحنى الخزان (IPR) باللون الأزرق
+fig.add_trace(go.Scatter(x=q_range, y=pwf_ipr, name="Inflow (IPR)", 
+                         line=dict(color='#0056b3', width=4)))
+# منحنى البئر (VLP) باللون الأحمر الواضح
+fig.add_trace(go.Scatter(x=q_range, y=pwf_vlp, name="Outflow (VLP)", 
+                         line=dict(color='#d9534f', width=4)))
+
+if opt_q > 0:
+    fig.add_trace(go.Scatter(x=[opt_q], y=[opt_p], mode='markers', name="Operating Point",
+                             marker=dict(size=15, color='#ffcc00', line=dict(width=2, color='black'))))
+
+fig.update_layout(
+    plot_bgcolor='white',
+    paper_bgcolor='white',
+    xaxis=dict(gridcolor='#e5e5e5', title="Production Rate (bbl/d)"),
+    yaxis=dict(gridcolor='#e5e5e5', title="Pressure (psi)"),
+    height=500,
+    legend=dict(x=0.7, y=0.9)
+)
+st.plotly_chart(fig, use_container_width=True)
+
+# 6. تذييل الصفحة
+st.info(f"Analysis Summary: Current Tubing ({t_size}\") is providing an optimal match at {int(opt_q)} bbl/d.")
+st.markdown(f"<p style='text-align: center; color: gray;'>Developed by Eng. Hussein Ali | Petroleum Engineering Excellence 2026</p>", unsafe_allow_html=True)
