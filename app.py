@@ -4,107 +4,110 @@ import numpy as np
 import plotly.graph_objects as go
 from io import BytesIO
 
-# 1. إعدادات التصميم الاحترافي (UI Styles)
-st.set_page_config(page_title="Petro-Elite Dashboard", layout="wide")
+# 1. إعدادات الصفحة والتصميم الفاخر
+st.set_page_config(page_title="Petro-Elite Optimizer", layout="wide", page_icon="🛢️")
 
-# تخصيص المظهر عبر CSS
 st.markdown("""
     <style>
-    .main { background-color: #f8f9fa; }
-    .stMetric { background-color: #ffffff; padding: 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #e9ecef; }
-    .stButton>button { width: 100%; border-radius: 10px; height: 3em; background-color: #004a99; color: white; }
-    .sidebar .sidebar-content { background-image: linear-gradient(#2e3b4e, #1a2533); color: white; }
-    h1 { color: #004a99; font-weight: 800; }
+    /* تغيير لون الخلفية العام */
+    .stApp { background-color: #f4f7f9; }
     
-    /* تنسيق خاص لتوسيط الشعار */
-    .logo-container {
+    /* تنسيق البطاقات العلوية */
+    div[data-testid="stMetric"] {
+        background-color: #ffffff;
+        border: 1px solid #e0e6ed;
+        padding: 15px 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+    }
+    
+    /* تنسيق القائمة الجانبية */
+    section[data-testid="stSidebar"] {
+        background-color: #1e293b;
+        color: white;
+    }
+    
+    /* تنسيق العنوان */
+    h1 { color: #0f172a; font-family: 'Segoe UI', sans-serif; font-weight: 700; }
+    
+    /* لوحة التحكم الجانبية */
+    .sidebar-logo {
         display: flex;
         justify-content: center;
-        margin-bottom: 20px;
+        padding: 20px 0;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# --- العنوان الرئيسي بشعار جذاب ---
-st.title("💎 Petro-Optimizer Elite")
-st.caption("Advanced Production Engineering & Economic Evaluation System")
-st.markdown("---")
-
-# 2. القائمة الجانبية المنظمة (المكان الجديد للشعار)
+# 2. القائمة الجانبية مع الشعار الجديد
 with st.sidebar:
-    # --- إضافة الشعار هنا ---
-    # يمكنك استبدال هذا الرابط برابط شعارك الخاص إذا كان مرفوعاً على الإنترنت
-    logo_url = "https://cdn-icons-png.flaticon.com/512/2967/2967232.png" 
-    st.markdown(f'<div class="logo-container"><img src="{logo_url}" width="120"></div>', unsafe_allow_html=True)
+    # تم تغيير الرابط لشعار يعبر عن الطاقة والتقنية (قطرة نفط تقنية)
+    logo_url = "https://cdn-icons-png.flaticon.com/512/4114/4114944.png"
+    st.markdown(f'<div class="sidebar-logo"><img src="{logo_url}" width="110"></div>', unsafe_allow_html=True)
     
-    st.header("Asset Control Center")
-    st.markdown("Developed by: Eng. Hussein Ali")
+    st.markdown("<h2 style='text-align: center; color: white;'>Asset Control</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #94a3b8;'>Eng. Hussein Ali Al-Amery</p>", unsafe_allow_html=True)
+    st.markdown("---")
     
-    tab_eng, tab_econ = st.tabs(["⚙️ Engineering", "💰 Economics"])
+    tab_eng, tab_econ = st.tabs(["⚙️ Physics", "💰 Market"])
     
     with tab_eng:
-        p_res = st.number_input("Res. Pressure (psi)", value=3500)
-        pi = st.slider("Productivity Index", 0.5, 5.0, 2.0)
-        t_size = st.selectbox("Tubing Size", [2.375, 2.875, 3.5])
+        p_res = st.number_input("Res. Pressure (psi)", value=3500, help="Reservoir static pressure")
+        pi = st.slider("Productivity Index (J)", 0.5, 5.0, 1.5)
+        t_size = st.selectbox("Tubing Size (inch)", [2.375, 2.875, 3.5])
     
     with tab_econ:
-        oil_price = st.slider("Oil Price ($/bbl)", 40, 120, 80)
-        opex = st.number_input("Lifting Cost ($)", value=20)
+        oil_price = st.slider("Oil Price ($/bbl)", 40, 140, 85)
+        opex = st.number_input("Lifting Cost ($/bbl)", value=15)
 
-# 3. محرك الحسابات (Node Analysis)
+# 3. الحسابات الهندسية (Nodal Analysis)
 q_range = np.linspace(0, p_res * pi, 50)
 pwf_ipr = p_res - (q_range / pi)
-pwf_vlp = 200 + (0.0006 * q_range**2 / (t_size/2.875)**4) + 1200
+pwf_vlp = 250 + (0.0007 * q_range**2 / (t_size/2.875)**4) + 1000
 
 idx = np.argwhere(np.diff(np.sign(pwf_ipr - pwf_vlp))).flatten()
 opt_q = q_range[idx[0]] if len(idx) > 0 else 0
 opt_p = pwf_ipr[idx[0]] if len(idx) > 0 else 0
 
-# 4. لوحة النتائج (Dashboard Metrics)
-col_m1, col_m2, col_m3, col_m4 = st.columns(4)
-with col_m1:
-    st.metric("Optimal Rate", f"{int(opt_q)} bbl/d", "Active")
-with col_m2:
-    st.metric("Flowing BHP", f"{int(opt_p)} psi")
-with col_m3:
-    st.metric("Daily Profit", f"${int(opt_q*(oil_price-opex)):,}")
-with col_m4:
-    st.metric("Status", "Optimized")
+# 4. لوحة القيادة (Dashboard)
+st.title("💎 Petro-Elite Optimizer")
+st.write("Advanced Nodal Analysis & Production Maximization")
 
-st.markdown("### 📈 Technical Analysis")
+m1, m2, m3, m4 = st.columns(4)
+m1.metric("Optimal Flow Rate", f"{int(opt_q)} bbl/d")
+m2.metric("Flowing Pressure", f"{int(opt_p)} psi")
+m3.metric("Daily Net Profit", f"${int(opt_q * (oil_price - opex)):,}")
+m4.metric("Asset Efficiency", f"{int((opt_q/(p_res*pi))*100)}%")
 
-# 5. الرسوم البيانية المنظمة
-col_chart1, col_chart2 = st.columns([2, 1])
+# 5. التحليل الفني والبصري
+st.markdown("### 📊 Engineering Optimization Plot")
+col_chart, col_side = st.columns([3, 1])
 
-with col_chart1:
+with col_chart:
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=q_range, y=pwf_ipr, name="Reservoir (IPR)", line=dict(color='#004a99', width=4)))
-    fig.add_trace(go.Scatter(x=q_range, y=pwf_vlp, name="Wellbore (VLP)", line=dict(color='#e63946', width=4)))
+    # IPR Curve
+    fig.add_trace(go.Scatter(x=q_range, y=pwf_ipr, name="Reservoir IPR", 
+                             line=dict(color='#3b82f6', width=4), fill='tozeroy'))
+    # VLP Curve
+    fig.add_trace(go.Scatter(x=q_range, y=pwf_vlp, name="Vertical Lift (VLP)", 
+                             line=dict(color='#ef4444', width=4)))
     
     if opt_q > 0:
-        fig.add_trace(go.Scatter(x=[opt_q], y=[opt_p], mode='markers+text', 
-                                 name="Match Point", text=["MATCH"], 
-                                 marker=dict(size=12, color='gold', symbol='star')))
-        
-    fig.update_layout(template="plotly_white", margin=dict(l=20, r=20, t=40, b=20), height=400,
-                      xaxis_title="Rate (bbl/d)", yaxis_title="Pressure (psi)")
+        fig.add_trace(go.Scatter(x=[opt_q], y=[opt_p], mode='markers', name="Optimal Point",
+                                 marker=dict(size=18, color='#f59e0b', symbol='diamond', 
+                                 line=dict(width=2, color='white'))))
+
+    fig.update_layout(template="plotly_white", margin=dict(l=0, r=0, t=30, b=0), height=450,
+                      legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
     st.plotly_chart(fig, use_container_width=True)
 
-with col_chart2:
-    st.write("**Smart Insights**")
-    st.info(f"The well is currently operating at {int((opt_q/(p_res*pi))*100)}% of its theoretical AOF.")
-    if opt_q > 500:
-        st.success("✅ High Performance Asset")
+with col_side:
+    st.info("**Analysis Summary**")
+    st.write(f"Well is performing at peak efficiency for a **{t_size}\"** tubing string.")
+    if opt_p < 1000:
+        st.warning("⚠️ Low FBHP: Risk of liquid loading detected.")
     else:
-        st.warning("⚠️ Optimization Candidate")
+        st.success("✅ Stable flow conditions confirmed.")
 
-# 6. تذييل الصفحة (Footer)
 st.markdown("---")
-f_col1, f_col2 = st.columns([4, 1])
-f_col1.write(f"© 2026 Petro-Elite™ | Strategic Asset Management Tool | اليمن")
-
-# ميزة إضافية: تحميل ملف البيانات (الجدول) كـ CSV
-output = BytesIO()
-df = pd.DataFrame({"Month": np.arange(0, 13), "Oil Rate": np.ones(13)*opt_q})
-df.to_csv(output, index=False)
-f_col2.download_button("📩 Download Data", output.getvalue(), "Well_Data.csv")
+st.caption("Developed by Eng. Hussein Ali | Final Graduate Project Extension 2026")
