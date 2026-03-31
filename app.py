@@ -28,13 +28,12 @@ if b == 0:
 else:
     q_t = q_i / (1 + b * (d_i / 12) * time)**(1/b)
 
-eur = np.trapz(q_t, time) * 30.44
+# التصحيح هنا: حساب الإنتاج التراكمي بطريقة مستقرة
+eur = (q_t.sum() / len(q_t)) * months * 30.44
 net_profit_per_bbl = oil_price - opex
 total_revenue = eur * net_profit_per_bbl
 
-# حساب الحد الاقتصادي (Economic Limit)
-# نفترض أن البئر يتوقف اقتصادياً إذا أصبح معدل الإنتاج لا يغطي تكلفة التشغيل الثابتة (مثال تبسيطي)
-economic_limit_rate = 50 # برميل في اليوم كحد أدنى افتراضي
+economic_limit_rate = 50 
 
 # إنشاء الجدول
 df = pd.DataFrame({
@@ -49,26 +48,18 @@ col1.metric("Estimated EUR", f"{int(eur):,} bbl")
 col2.metric("Projected Net Revenue", f"${int(total_revenue):,}")
 col3.metric("Profit per Barrel", f"${net_profit_per_bbl}")
 
-# --- الرسم البياني المطور ---
+# --- الرسم البياني ---
 fig = go.Figure()
-fig.add_trace(go.Scatter(x=df["Month"], y=df["Oil Rate (bbl/d)"], name="Production Forecast", line=dict(color='#2ecc71', width=3)))
-# إضافة خط الحد الاقتصادي
-fig.add_hline(y=economic_limit_rate, line_dash="dot", line_color="red", annotation_text="Economic Limit")
-
-fig.update_layout(title="Production & Economic Forecast", xaxis_title="Months", yaxis_title="Rate (bbl/d)")
+fig.add_trace(go.Scatter(x=df["Month"], y=df["Oil Rate (bbl/d)"], name="Production", line=dict(color='#2ecc71', width=3)))
+fig.add_hline(y=economic_limit_rate, line_dash="dot", line_color="red", annotation_text="Limit")
+fig.update_layout(title="Well Performance Forecast", xaxis_title="Months", yaxis_title="Rate (bbl/d)")
 st.plotly_chart(fig, use_container_width=True)
 
-# --- التنبيهات الذكية ---
-if q_t[-1] < economic_limit_rate:
-    st.warning(f"⚠️ Warning: Well reaches economic limit before month {months}. Consider Workover or Plug & Abandonment.")
-else:
-    st.success("✅ Well remains profitable throughout the forecast period.")
-
 # --- أزرار التحميل ---
-st.markdown("### 📥 Download Professional Reports")
+st.markdown("### 📥 Reports")
 output = BytesIO()
 with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
     df.to_excel(writer, index=False, sheet_name='Economics')
 processed_data = output.getvalue()
-
-st.download_button(label="Download Economic Report (Excel)", data=processed_data, file_name='well_economics_report.xlsx')
+st.download_button(label="Download Excel Report", data=processed_data, file_name='well_report.xlsx')
+    
